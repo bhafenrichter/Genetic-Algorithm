@@ -155,7 +155,13 @@ public class GeneticAlgoirthm {
         //generate the next population
         Random rand = new Random();
         ArrayList<PopulationMember> newGen = new ArrayList<PopulationMember>();
-        for (int j = 0; j < currentGen.size(); j++) {
+        int startingPoint = 0;
+        if(isSavedBestSolution){
+            startingPoint++;
+            //save the best solution to the next generation
+            newGen.add(currentGen.get(0));
+        }
+        for (int j = startingPoint; j < currentGen.size(); j++) {
 
             //System.out.println(dad.fitness + ", " + mom.fitness);
             String crossedOverChromosome = "";
@@ -231,15 +237,16 @@ public class GeneticAlgoirthm {
         //calculate the position of mutation
         Random rand = new Random();
         int position = rand.nextInt(chromosome.length());
-        
-        //flip the bit
+        int position2 = rand.nextInt(chromosome.length());
+        //flip two bits
         StringBuilder sequence = new StringBuilder(chromosome);
-        if(chromosome.charAt(position) == '0'){
-            sequence.setCharAt(position, '1');
-        }else{
-            sequence.setCharAt(position, '0');
-        }
+        char temp = chromosome.charAt(position);
         
+        //set first char to second
+        sequence.setCharAt(position, sequence.charAt(position2));
+        
+        //set second to first
+        sequence.setCharAt(position2, temp);
         return sequence.toString();
     }
     
