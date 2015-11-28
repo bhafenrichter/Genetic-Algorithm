@@ -23,38 +23,43 @@ public class GeneticAlgoirthm {
 
     public static void main(String[] args) {
         KeyboardInputClass input = new KeyboardInputClass();
-
-        //get the users information for the GA
-        shipmentData = readShipmentInfo();
-
-        //get the maximum value for the fitness function
-        maxValue = 0;
-        for (int i = 0; i < shipmentData.size(); i++) {
-            maxValue += shipmentData.get(i).value;
-        }
-
-        //initialize defaults
-        populationSize = 20;
-        knapsackCapacity = 200;
-        crossoverRate = .5;
-        mutationRate = .1;
-        numberOfGenerations = 1;
-        targetValue = 1000;
-        targetFitness = 1.0;
-        numberOfRuns = 1;
-        histogramBinSize = 1000;
-
-        //set the parameters of the run
-        setParameters();
-
-        boolean hasReachedFitness = false;
-        boolean oneRunCase = false;
-        int generationNumber = 0;
+        boolean hasFinished = true;
         while (true) {
+            
+            if(hasFinished){
+                hasFinished = false;
+                //get the users information for the GA
+            shipmentData = readShipmentInfo();
+
+            //get the maximum value for the fitness function
+            maxValue = 0;
+            for (int i = 0; i < shipmentData.size(); i++) {
+                maxValue += shipmentData.get(i).value;
+            }
+
+            //initialize defaults
+            populationSize = 20;
+            knapsackCapacity = 200;
+            crossoverRate = .5;
+            mutationRate = .1;
+            numberOfGenerations = 1;
+            targetValue = 1000;
+            targetFitness = 1.0;
+            numberOfRuns = 1;
+            histogramBinSize = 1000;
+
+            //set the parameters of the run
+            setParameters();
+            }
+            
+            boolean oneRunCase = false;
+            int generationNumber = 0;
+
             //determine if we need to keep asking for generations
             if (numberOfRuns == 1) {
                 oneRunCase = true;
             }
+            
 
             if (oneRunCase) {
                 //initializes the first population at complete random without mutation or crossover
@@ -75,7 +80,7 @@ public class GeneticAlgoirthm {
                             + currentGen.get(0).totalValue);
                     //if we reach the target fitness, stop iterating and show the details
                     if (currentGen.get(0).fitness >= targetFitness) {
-                        hasReachedFitness = true;
+                        hasFinished = true;
                         break;
                     }
                 }
@@ -114,14 +119,13 @@ public class GeneticAlgoirthm {
                 } else {
                     isPopulationDetails = false;
                 }
-
+                
                 if (isPopulationDetails) {
                     System.out.println("Population members and attributes (fitness, weight, value):");
                     for (int i = 0; i < currentGen.size(); i++) {
                         PopulationMember cur = currentGen.get(i);
                         System.out.println(cur.sequence);
                         System.out.println("(" + ", " + cur.fitness + ", " + cur.totalWeight + ", " + cur.totalValue + ")");
-
                     }
                 }
 
@@ -134,7 +138,7 @@ public class GeneticAlgoirthm {
                 }
 
                 //reset the parameters
-                if (isSetParameters) {
+                if (isSetParameters && !hasFinished) {
                     setParameters();
                 } else {
                     try {
@@ -156,48 +160,44 @@ public class GeneticAlgoirthm {
                     ArrayList<PopulationMember> currentGen = initializeFirstGeneration(populationSize, shipmentData.size());
                     //subject to change depending on what Dr. Donaldson wants
                     int index = 0;
-                    while(currentGen.get(0).fitness < targetFitness){
+                    while (currentGen.get(0).fitness < targetFitness) {
                         index++;
                         currentGen = iterateGenerations(index, currentGen);
-                        
+
                         //safeguard against endless loop
-                        if(index == 1000000){
+                        if (index == 1000000) {
                             break;
                         }
                         //System.out.println(currentGen.get(0).fitness);
                     }
-                    
-                    System.out.println("Run # " 
-                            + i 
-                            + ", Generation " 
-                            + index 
-                            + ": Best Fitness: " 
-                            + currentGen.get(0).fitness 
-                            + ", Weight: " 
-                            + currentGen.get(0).totalWeight 
-                            + ", Value: " 
+
+                    System.out.println("Run # "
+                            + i
+                            + ", Generation "
+                            + index
+                            + ": Best Fitness: "
+                            + currentGen.get(0).fitness
+                            + ", Weight: "
+                            + currentGen.get(0).totalWeight
+                            + ", Value: "
                             + currentGen.get(0).totalValue);
                     generationCount[i] = index;
                 }
-                
+
                 System.out.println("Generation Count Summary:");
                 System.out.println("-------------------------");
                 for (int i = 0; i < generationCount.length; i++) {
                     System.out.println(generationCount[i]);
                 }
-                
+
                 System.out.println("Sorted Generation Count Summary:");
                 System.out.println("-------------------------");
-                
+
                 Arrays.sort(generationCount);
                 for (int i = 0; i < generationCount.length; i++) {
                     System.out.println(generationCount[i]);
                 }
-            }
-
-            if (hasReachedFitness) {
-                System.out.println("You have reached the perfect fitness. Victory dance!");
-                System.exit(-1);
+                hasFinished = true;
             }
         }
     }
@@ -279,7 +279,7 @@ public class GeneticAlgoirthm {
             newGen.add(child);
         }
 
-            //set the new generation to the newly generated one 
+        //set the new generation to the newly generated one 
         //System.out.println(Arrays.toString(newGen.toArray()));
         //sort the array
         //todo: make a better sort
