@@ -400,9 +400,18 @@ public class GeneticAlgoirthm {
 
             String chromosome = "";
             //generate random chromsome
+            double factor = (double) i / (double) populationSize;
             for (int j = 0; j < chromosomeLength; j++) {
-                String str = Integer.toString(rand.nextInt(2));
-                chromosome += str;
+                //have alot of 1s and alot of 0s in other population
+                double random = rand.nextDouble();
+                
+                if(random > factor){
+                    chromosome += '1';
+                }else{
+                    chromosome += '0';
+                }
+                //String str = Integer.toString(rand.nextInt(2));
+                //chromosome += str;
             }
 
             PopulationMember cur = new PopulationMember(chromosome);
