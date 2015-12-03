@@ -133,7 +133,11 @@ public class GeneticAlgoirthm {
                     
                 }
                 //System.out.println(Arrays.toString(currentGen.toArray()));
-                PopulationMember bestMember = currentGen.get(0);
+                PopulationMember bestMember = new PopulationMember();
+                if(currentGen.size() > 0){
+                    bestMember = currentGen.get(0);
+                }
+               
 
                 boolean isDetails = true;
                 String details = input.getKeyboardInput("Show Details? (Y / N)");
@@ -231,8 +235,8 @@ public class GeneticAlgoirthm {
                             break;
                         }
                     }
-
-                    System.out.println("Run # "
+                    if(currentGen.size() > 0){
+                        System.out.println("Run # "
                             + i
                             + ", Generation "
                             + index
@@ -242,6 +246,8 @@ public class GeneticAlgoirthm {
                             + currentGen.get(0).totalWeight
                             + ", Value: "
                             + currentGen.get(0).totalValue);
+                    }
+                    
                     generationCount[i] = index;
                 }
 

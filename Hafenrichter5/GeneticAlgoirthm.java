@@ -35,7 +35,8 @@ public class GeneticAlgoirthm {
     public static int numberOfRuns; //user defined as the number of runs we should do of the GA
     public static int histogramBinSize; //user defined as the size of the histogram bins
     public static ArrayList<PopulationMember> currentGen;
-
+    public static boolean isError;  //safe guard against bad run throughs
+    public static int totalShipmentWeight;
 //***********************************************************************************************************
 //Method: Main
 //Description: Contains the essential methods and calls required to run the algorithms
@@ -57,18 +58,22 @@ public class GeneticAlgoirthm {
                 hasFinished = false;
                 restartCount = 0;
                 numberOfGenerations = 1;
+                isError = false;
                 //get the users information for the GA
             shipmentData = readShipmentInfo();
 
             //get the maximum value for the fitness function
             maxValue = 0;
+            totalShipmentWeight = 0;
             for (int i = 0; i < shipmentData.size(); i++) {
                 maxValue += shipmentData.get(i).value;
+                totalShipmentWeight += shipmentData.get(i).value;
             }
-
+            totalShipmentWeight = totalShipmentWeight / 2;
+            
             //initialize defaults
-            populationSize = 20;
-            knapsackCapacity = 200;
+            populationSize = 50;
+            knapsackCapacity = totalShipmentWeight;
             crossoverRate = .75;
             mutationRate = .5;
             targetValue = maxValue;
@@ -100,6 +105,10 @@ public class GeneticAlgoirthm {
                     generationNumber++;
                     currentGen = iterateGenerations(generationNumber, currentGen);
 
+                    if(isError){
+                        hasFinished = true;
+                        break;
+                    }
                     System.out.println("Generation: "
                             + generationNumber
                             + ": Best Fitness: "
@@ -115,13 +124,20 @@ public class GeneticAlgoirthm {
                     }
                     
                     //we've reached the best combination
-                    if(currentGen.get(0).totalValue >= targetValue && currentGen.get(0).totalWeight <= knapsackCapacity){
+                    if(currentGen.get(0).totalValue >= targetValue 
+                            && currentGen.get(0).totalWeight <= knapsackCapacity){
                         hasFinished = true;
                         break;
                     }
+                    
+                    
                 }
                 //System.out.println(Arrays.toString(currentGen.toArray()));
-                PopulationMember bestMember = currentGen.get(0);
+                PopulationMember bestMember = new PopulationMember();
+                if(currentGen.size() > 0){
+                    bestMember = currentGen.get(0);
+                }
+               
 
                 boolean isDetails = true;
                 String details = input.getKeyboardInput("Show Details? (Y / N)");
@@ -214,10 +230,13 @@ public class GeneticAlgoirthm {
                         }
                         
                         
-                        //System.out.println(currentGen.get(0).fitness);
+                        if(isError){
+                            hasFinished = true;
+                            break;
+                        }
                     }
-
-                    System.out.println("Run # "
+                    if(currentGen.size() > 0){
+                        System.out.println("Run # "
                             + i
                             + ", Generation "
                             + index
@@ -227,6 +246,8 @@ public class GeneticAlgoirthm {
                             + currentGen.get(0).totalWeight
                             + ", Value: "
                             + currentGen.get(0).totalValue);
+                    }
+                    
                     generationCount[i] = index;
                 }
 
@@ -261,11 +282,11 @@ public class GeneticAlgoirthm {
     public static void setParameters() {
         KeyboardInputClass input = new KeyboardInputClass();
         try {
-            populationSize = Integer.parseInt(input.getKeyboardInput("Population Size? (Default: 20)"));
+            populationSize = Integer.parseInt(input.getKeyboardInput("Population Size? (Default: 50)"));
         } catch (Exception e) {
         }
         try {
-            knapsackCapacity = Integer.parseInt(input.getKeyboardInput("Knapsack Capacity? (Default: 200)"));
+            knapsackCapacity = Integer.parseInt(input.getKeyboardInput("Knapsack Capacity? (Default: " + totalShipmentWeight + ")"));
         } catch (Exception e) {
         }
         try {
@@ -324,13 +345,22 @@ public class GeneticAlgoirthm {
                 
                 PopulationMember mom = dad;
                 //addresses duplicates
+                int iterationCount = 0;
                 while(mom == dad){
                     mom = getBestParentOnWeightedPercentage(currentGen);
+                    iterationCount++;
+                    if(iterationCount > 100){
+                        System.out.println("There is an issue creating the first generation.  Please try a Knapsack Capacity closer to the Total Value.");
+                        isError = true;
+                        break;
+                    }
                 }
                 PopulationMember[] chromosomes = crossover(dad,mom);
                 crossedOverChromosome = chromosomes[0].sequence;
                 crossedOverChromosome2 = chromosomes[1].sequence;
-                
+                if(isError){
+                    break;
+                }
             } else {
                 //don't crossover, just add the dad 
                 crossedOverChromosome = getBestParentOnWeightedPercentage(currentGen).sequence;
@@ -474,10 +504,14 @@ public class GeneticAlgoirthm {
             //negate the length
             int index = 1;
             while (textContents[index] != null) {
-                Item cur = new Item(Integer.parseInt(textContents[index++]), Integer.parseInt(textContents[index++]));
-                totalValueOfShipment += cur.value;
-                totalWeightOfShipment += cur.weight;
-                shipmentData.add(cur);
+                try{
+                    Item cur = new Item(Integer.parseInt(textContents[index++]), Integer.parseInt(textContents[index++]));
+                    totalValueOfShipment += cur.value;
+                    totalWeightOfShipment += cur.weight;
+                    shipmentData.add(cur);
+                }
+                catch(Exception e){System.out.println("There was an error reading one of the values.");}
+                
             }
 
             //print the item data
