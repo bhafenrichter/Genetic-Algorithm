@@ -105,6 +105,10 @@ public class GeneticAlgoirthm {
                     generationNumber++;
                     currentGen = iterateGenerations(generationNumber, currentGen);
 
+                    if(isError){
+                        hasFinished = true;
+                        break;
+                    }
                     System.out.println("Generation: "
                             + generationNumber
                             + ": Best Fitness: "
@@ -126,10 +130,7 @@ public class GeneticAlgoirthm {
                         break;
                     }
                     
-                    if(isError){
-                        hasFinished = true;
-                        break;
-                    }
+                    
                 }
                 //System.out.println(Arrays.toString(currentGen.toArray()));
                 PopulationMember bestMember = currentGen.get(0);
