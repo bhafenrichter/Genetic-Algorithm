@@ -1,6 +1,10 @@
 
 package geneticalgoirthm;
 
+//Class Item.java
+//Description: Contains the data for each item in the shipment
+//***********************************************************************************************************
+//***********************************************************************************************************
 public class Item {
     public int weight;
     public int value;

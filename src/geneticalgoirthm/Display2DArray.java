@@ -58,8 +58,8 @@ public class Display2DArray extends Frame {
 		sourceImage = source;
 		showOnce = true;
 		textLineCount = 0;
-		text = null;
-		textPosition = null;
+		text = new String[500];
+		textPosition = new int[500][500];
 	}
 	//**************************************************************************************
 	Display2DArray(ImageClass imageObject) {

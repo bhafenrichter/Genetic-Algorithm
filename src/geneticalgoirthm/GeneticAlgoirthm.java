@@ -1,3 +1,12 @@
+//Program: Hafenrichter.java
+//Course: COSC 420
+//Description: An implementation of the Genetic Algorithm
+//Author: Brandon Hafenrichter
+//Revised: December 3, 2015
+//Language: Java
+//IDE: Netbeans 8.0.2
+//***********************************************************************************************************
+//***********************************************************************************************************
 package geneticalgoirthm;
 
 import java.util.ArrayList;
@@ -6,37 +15,48 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
+//Class Main.java
+//Description: Contains the essential methods and calls required to run the genetic algorithm minus the fitness function
+//***********************************************************************************************************
+//***********************************************************************************************************
+
 public class GeneticAlgoirthm {
     
-    //GO FOR THE MAX VALUE, BUT IF IT REACHES THE TARGET VALUE STOP!  TARGET VALUE IS A STOPPING POINT, NOT THE DESTINATION,
-    //WE NEED TO MAX OUT THE VALUE, NOT JUST WAIT TIL IT GETS TO THE TARGET VALUE
-    //VIEW DETAILS: ALSO GIVES YOU THE STATS OF WHAT THE BEST FITNESS SELECTED BASED ON THE POPULATION
-    //GO WITH DEFAULTS YOU LIKE BEST, DEFAULTS ARE MEANINGLESS TO HIM
-    //BIN SIZE IS THE GAP BETWEEN HISTOGRAM BARS
-    //HISTOGRAM SHOULD SHOW THE COUNTS OF EACH GENERATION FOR MULTIPLE RUNS
-    //DETERMINE HOW TO DRAW THE HORIZONTAL GRID LINES
-    
-    public static ArrayList<Item> shipmentData;
-    public static int knapsackCapacity;
-    public static int targetValue;
-    public static double targetFitness;
-    public static int numberOfGenerations;
-    public static double crossoverRate;
-    public static double mutationRate;
-    public static boolean isSavedBestSolution;
-    public static int maxValue;
-    public static int populationSize;
-    public static int numberOfRuns;
-    public static int histogramBinSize;
+    public static ArrayList<Item> shipmentData; //contains all the information of the shipment item
+    public static int knapsackCapacity; //user defined as how much the plane can hold
+    public static int targetValue;  //the trigger value, if we reach this value we stop iterating
+    public static double targetFitness; //the fitness we would like to reach
+    public static int numberOfGenerations;  //number of generations
+    public static double crossoverRate; //user defined as the rate at which the parents should crossover
+    public static double mutationRate;  //user defined as the rate at which the childrens chromosome mutates
+    public static boolean isSavedBestSolution;  //user defined as saving the best member of the previous population
+    public static int maxValue; //sum of all items values
+    public static int populationSize;   //user defined as the number of members in each generation
+    public static int numberOfRuns; //user defined as the number of runs we should do of the GA
+    public static int histogramBinSize; //user defined as the size of the histogram bins
+    public static ArrayList<PopulationMember> currentGen;
 
+//***********************************************************************************************************
+//Method: Main
+//Description: Contains the essential methods and calls required to run the algorithms
+//Returns: None
+//Calls:    readShipmentInfo()
+//          setParameters()
+//          initializeFirstGeneration()
+//          iterateGeneration()
+//Parameters: String[] args             standard parameters for the main method
+//***********************************************************************************************************
     public static void main(String[] args) {
         KeyboardInputClass input = new KeyboardInputClass();
         boolean hasFinished = true;
-        
-        //displayImage(new int[]{500,500,1001,1001,1001,1001,2000,3000,3000,3000}, 1000);
+        int restartCount = 0;
+        ///displayImage(new int[]{500,500,1001,1001,1001,1001,2000,3000,3000,3000}, 1000);
+
         while (true) {
             if(hasFinished){
                 hasFinished = false;
+                restartCount = 0;
+                numberOfGenerations = 1;
                 //get the users information for the GA
             shipmentData = readShipmentInfo();
 
@@ -49,9 +69,8 @@ public class GeneticAlgoirthm {
             //initialize defaults
             populationSize = 20;
             knapsackCapacity = 200;
-            crossoverRate = .5;
-            mutationRate = .1;
-            numberOfGenerations = 1;
+            crossoverRate = .75;
+            mutationRate = .5;
             targetValue = maxValue;
             targetFitness = 1.0;
             numberOfRuns = 1;
@@ -69,11 +88,13 @@ public class GeneticAlgoirthm {
                 oneRunCase = true;
             }
             
+            restartCount++;
 
-            if (oneRunCase) {
-                //initializes the first population at complete random without mutation or crossover
-                ArrayList<PopulationMember> currentGen = initializeFirstGeneration(populationSize, shipmentData.size());
-
+            if (oneRunCase) {                
+                
+                if(restartCount <=1){
+                    currentGen = initializeFirstGeneration(populationSize, shipmentData.size());
+                }
                 //iterates the generation
                 for (int i = 0; i < numberOfGenerations; i++) {
                     generationNumber++;
@@ -144,24 +165,27 @@ public class GeneticAlgoirthm {
                     }
                 }
 
-                boolean isSetParameters = true;
-                String parameters = input.getKeyboardInput("Reset Parameters? (Y / N)");
-                if (parameters.length() > 0 && parameters.toLowerCase().equals("y")) {
-                    isSetParameters = true;
-                } else {
-                    isSetParameters = false;
-                }
+                if (!hasFinished) {
+                    boolean isSetParameters = true;
+                    String parameters = input.getKeyboardInput("Reset Parameters? (Y / N)");
+                    if (parameters.length() > 0 && parameters.toLowerCase().equals("y")) {
+                        isSetParameters = true;
+                    } else {
+                        isSetParameters = false;
+                    }
 
-                //reset the parameters
-                if (isSetParameters && !hasFinished) {
-                    setParameters();
-                } else {
-                    try {
-                        numberOfGenerations = Integer.parseInt(input.getKeyboardInput("Number of generations? (default = 10000):"));
-                    } catch (Exception e) {
-                        numberOfGenerations = 10000;
+                    //reset the parameters
+                    if (isSetParameters && !hasFinished) {
+                        setParameters();
+                    } else {
+                        try {
+                            numberOfGenerations = Integer.parseInt(input.getKeyboardInput("Number of generations? (default = 10000):"));
+                        } catch (Exception e) {
+                            numberOfGenerations = 10000;
+                        }
                     }
                 }
+                
 
             } else {
                 try {
@@ -220,12 +244,25 @@ public class GeneticAlgoirthm {
                     System.out.println(generationCount[i]);
                 }
                 
-                displayImage(generationCount,histogramBinSize);
+                String batch = "";
+                while(batch.length() <= 0){
+                    displayImage(generationCount,histogramBinSize);
+                    System.out.println("Each Bar Represents 50 Generations.");
+                    
+                }
+                
                 hasFinished = true;
             }
         }
     }
-
+//***********************************************************************************************************
+//Method: setParameters()
+//Description: Lets the user select the parameters for the GA
+//Returns: None
+//Calls: None    
+//Parameters: None
+//***********************************************************************************************************
+    
     public static void setParameters() {
         KeyboardInputClass input = new KeyboardInputClass();
         try {
@@ -237,11 +274,11 @@ public class GeneticAlgoirthm {
         } catch (Exception e) {
         }
         try {
-            crossoverRate = Integer.parseInt(input.getKeyboardInput("Crossover Rate? (0-1: Default = .5)"));
+            crossoverRate = Integer.parseInt(input.getKeyboardInput("Crossover Rate? (0-1: Default = .75)"));
         } catch (Exception e) {
         }
         try {
-            mutationRate = Integer.parseInt(input.getKeyboardInput("Mutation Rate? (0-1: Default = .1)"));
+            mutationRate = Integer.parseInt(input.getKeyboardInput("Mutation Rate? (0-1: Default = .5)"));
         } catch (Exception e) {
         }
         isSavedBestSolution = true;
@@ -264,7 +301,16 @@ public class GeneticAlgoirthm {
         } catch (Exception e) {
         }
     }
-
+//***********************************************************************************************************
+//Method: IterateGeneration()
+//Description: Takes the current generation data and iterates to the next using crossover() and mutate()
+//Returns:          ArrayList<PopulationMember> nextGeneration
+//Calls:            getBestParentOnWeightedPercentage()
+//                  mutate()
+//                  crossover()
+//Parameters:       int generationNumber    what generation we are currently on
+//                  ArrayList<PopulationMember> currentGen  the previous generation that'll be iterated over
+//***********************************************************************************************************
     public static ArrayList<PopulationMember> iterateGenerations(int generationNumber, ArrayList<PopulationMember> currentGen) {
         //generate the next population
         Random rand = new Random();
@@ -275,6 +321,7 @@ public class GeneticAlgoirthm {
 
             //System.out.println(dad.fitness + ", " + mom.fitness);
             String crossedOverChromosome = "";
+            String crossedOverChromosome2 = "";
             //crossover if it gets good rate
             if (rand.nextDouble() <= crossoverRate) {
                 //select two parents
@@ -285,18 +332,26 @@ public class GeneticAlgoirthm {
                 while(mom == dad){
                     mom = getBestParentOnWeightedPercentage(currentGen);
                 }
-                crossedOverChromosome = crossover(dad, mom).sequence;
+                PopulationMember[] chromosomes = crossover(dad,mom);
+                crossedOverChromosome = chromosomes[0].sequence;
+                crossedOverChromosome2 = chromosomes[1].sequence;
+                
             } else {
                 //don't crossover, just add the dad 
                 crossedOverChromosome = getBestParentOnWeightedPercentage(currentGen).sequence;
+                crossedOverChromosome2 = getBestParentOnWeightedPercentage(currentGen).sequence;
             }
 
             //check for mutation  
             if (rand.nextDouble() <= mutationRate) {
                 crossedOverChromosome = mutate(crossedOverChromosome);
+                crossedOverChromosome2 = mutate(crossedOverChromosome2);
             }
             PopulationMember child = new PopulationMember(crossedOverChromosome);
-            newGen.add(child);
+            PopulationMember child2 = new PopulationMember(crossedOverChromosome2);
+            if(newGen.size() < populationSize){
+                newGen.add(child);
+            }
         }
 
         //set the new generation to the newly generated one 
@@ -309,16 +364,22 @@ public class GeneticAlgoirthm {
             }
         });
 
-        if (isSavedBestSolution) {
-            startingPoint++;
-            //save the best solution to the next generation
-            newGen.add(currentGen.get(0));
-        }
+//        if (isSavedBestSolution) {
+//            startingPoint++;
+//            //save the best solution to the next generation
+//            newGen.add(currentGen.get(0));
+//        }
         
         return newGen;
 
     }
-
+//***********************************************************************************************************
+//Method: getBestParentOnWeightedPercentage()
+//Description: Returns the best PopulationMember based on their fitness
+//Returns:          PopulationMember
+//Calls: None
+//Parameters:       ArrayList<PopulationMember> gen  the generation that'll be selected from
+//***********************************************************************************************************
     public static PopulationMember getBestParentOnWeightedPercentage(ArrayList<PopulationMember> gen) {
         //find the sum of all the fitnesses
         double sum = 0;
@@ -344,7 +405,13 @@ public class GeneticAlgoirthm {
         //should never reach this code
         return gen.get(0);
     }
-
+//***********************************************************************************************************
+//Method: mutate()
+//Description: Mutates the chromosome by flipping two bit positions
+//Returns:          String              the newly mutated chromosome
+//Calls: None
+//Parameters:       String chromosome   the chromosome to be mutated
+//***********************************************************************************************************
     public static String mutate(String chromosome) {
         //calculate the position of mutation
         Random rand = new Random();
@@ -362,28 +429,43 @@ public class GeneticAlgoirthm {
         return sequence.toString();
     }
 
-    public static PopulationMember crossover(PopulationMember a, PopulationMember b) {
+//***********************************************************************************************************
+//Method: crossover()
+//Description: crosses the genes of two population members and returns an array of two members to add to the population
+//Returns:          PopulationMember[] members  the two members that'll be added to the population
+//Calls: None
+//Parameters:       PopulationMember a          the dad of the crossover
+//                  PopulationMember b          the mom of the crossover
+//***********************************************************************************************************
+    public static PopulationMember[] crossover(PopulationMember a, PopulationMember b) {
         //pick crossover point
         Random rand = new Random();
         int firstCrossoverPoint = rand.nextInt(a.sequence.length() + 1);
-        int secondCrossoverPoint = rand.nextInt(a.sequence.length() + 1);
-        String sequence = "";
+        //int secondCrossoverPoint = rand.nextInt(a.sequence.length() + 1);
+        String sequence1 = "";
 
-        if (firstCrossoverPoint > secondCrossoverPoint) {
-            sequence += a.sequence.substring(0, secondCrossoverPoint);
-            sequence += b.sequence.substring(secondCrossoverPoint, firstCrossoverPoint);
-            sequence += a.sequence.substring(firstCrossoverPoint, a.sequence.length());
-        } else {
-            sequence += a.sequence.substring(0, firstCrossoverPoint);
-            sequence += b.sequence.substring(firstCrossoverPoint, secondCrossoverPoint);
-            sequence += a.sequence.substring(secondCrossoverPoint, a.sequence.length());
-        }
+        sequence1 += a.sequence.substring(0,firstCrossoverPoint);
+        sequence1 += b.sequence.substring(firstCrossoverPoint, a.sequence.length());
+        
+        String sequence2 = "";
+        sequence2 += b.sequence.substring(0,firstCrossoverPoint);
+        sequence2 += a.sequence.substring(firstCrossoverPoint, a.sequence.length());
+
         //sequence += a.sequence.substring(0, crossoverPoint);
         //sequence += b.sequence.substring(crossoverPoint, a.sequence.length());
-
-        return new PopulationMember(sequence);
+        PopulationMember[] sequences = new PopulationMember[2];
+        sequences[0] = new PopulationMember(sequence1);
+        sequences[1] = new PopulationMember(sequence2);
+        
+        return sequences;
     }
-
+//***********************************************************************************************************
+//Method: readShipmentInfo()
+//Description: Reads the text file with the shipment data
+//Returns:          ArrayList<Item>     the item data              
+//Calls: None
+//Parameters: None
+//***********************************************************************************************************
     public static ArrayList<Item> readShipmentInfo() {
         TextFileClass textFile = new TextFileClass();
         textFile.getFileName("Specify the text file to be read:");
@@ -417,55 +499,57 @@ public class GeneticAlgoirthm {
         }
 
     }
-
+//***********************************************************************************************************
+//Method: initializeFirstGeneration()
+//Description: Creates the first generation for the GA
+//Returns:          ArrayList<PopulationMember> generation  the created generation
+//Calls: None
+//Parameters:       int populationSize          number of members in the population
+//                  int chromosomeLength        the size of the chromosome to be used
+//***********************************************************************************************************
     private static ArrayList<PopulationMember> initializeFirstGeneration(int populationSize, int chromosomeLength) {
-        ArrayList<PopulationMember> generation = new ArrayList<PopulationMember>();
+        double factor = .5;
+        while (true) {
+            ArrayList<PopulationMember> generation = new ArrayList<PopulationMember>();
 
-        Random rand = new Random();
-        for (int i = 0; i < populationSize; i++) {
+            Random rand = new Random();
+            for (int i = 0; i < populationSize; i++) {
 
-            String chromosome = "";
-            //generate random chromsome
-            double factor = (double) i / (double) populationSize;
-            double padding = .1;
-            if(factor == 0.0){
-                factor = factor + padding;
-            }
-            
-            if(factor + padding > 1){
-                factor = factor - padding;
-            }
-            for (int j = 0; j < chromosomeLength; j++) {
-                //have alot of 1s and alot of 0s in other population
-                double random = rand.nextDouble();
-                
-                
-                if(random > factor){
-                    chromosome += '1';
-                }else{
-                    chromosome += '0';
-                }
+                String chromosome = "";
+                //generate random chromsome
+                for (int j = 0; j < chromosomeLength; j++) {
+                    //have alot of 1s and alot of 0s in other population
+                    double random = rand.nextDouble();
+
+                    if (random < .3) {
+                        chromosome += '1';
+                    } else {
+                        chromosome += '0';
+                    }
                 //String str = Integer.toString(rand.nextInt(2));
-                //chromosome += str;
+                    //chromosome += str;
+                }
+
+                PopulationMember cur = new PopulationMember(chromosome);
+                generation.add(cur);
             }
 
-            PopulationMember cur = new PopulationMember(chromosome);
-            generation.add(cur);
+               return generation; 
         }
-        return generation;
     }
-
+//***********************************************************************************************************
+//Method: displayImage()
+//Description: Mutates the chromosome by flipping two bit positions
+//Returns: None
+//Calls:            ImageConstruction           creates the image
+//Parameters:       int[] generationCount       the counts of each generation 
+//                  int binSize                 the size of each bin
+//***********************************************************************************************************
     private static void displayImage(int[] generationCount, int binSize) {
         ImageConstruction myImage = new ImageConstruction(500, 500, 0, 500, 0, 500, 1);
+        myImage.displaySetup();
+        myImage.displayImage(false, "GA Histogram", true);
         
-        myImage.displayImage(true, "GA Histogram", true);
-        myImage.insertLine(50, 50, 50, 450, 250, 0, 0);
-        myImage.insertLine(50, 50, 450, 50, 250, 0, 0);
-        for (int i = 0; i < 10; i++) {
-            myImage.insertLine(50 * i, 50, 50 * i, 55, 250, 0, 0);
-            myImage.insertLine(50, 50 * i, 55, 50 * i, 250, 0, 0);
-            
-        }
         int[] counts = new int[25];
         for(int i = 0; i < generationCount.length; i++){
             int count = generationCount[i];
@@ -478,10 +562,34 @@ public class GeneticAlgoirthm {
             }
         }
         
-        double barWidth = 495.0 / 20.0;
+        double barWidth = 495.0 / 30.0;
+        boolean trigger = true;
         for(int i = 0; i < counts.length; i++){
             double barHeight = ((495 * counts[i]) / generationCount.length) + 50;
-            myImage.insertBox(((barWidth * i)+ barWidth) + barWidth, barWidth * 2, ((barWidth * i) + (barWidth * 2)) + barWidth, barHeight, 0, 250, 0, false);
+            if(trigger){
+                trigger = false;
+                myImage.insertBox(((barWidth * i)+ barWidth) + barWidth + barWidth, 50, ((barWidth * i) + (barWidth * 3)) + barWidth, barHeight, 0, 250, 0, true);
+            }else{
+                trigger = true;
+                myImage.insertBox(((barWidth * i)+ barWidth) + barWidth + barWidth, 50, ((barWidth * i) + (barWidth * 3)) + barWidth, barHeight, 0, 0, 250, true);
+            }
+        }
+        //myImage.insertText(20, 50, "Batch", 50);
+        //chart lines
+        for (int i = 0; i < 10; i++) {
+            //myImage.insertLine(50 * i, 50, 50 * i, 55, 250, 0, 0);
+           
+            myImage.insertLine(50, 50 * i, 450, 50 * i, 250, 0, 0);
+        }
+        myImage.insertLine(50, 50, 50, 450, 250, 0, 0);
+        myImage.insertLine(50, 50, 450, 50, 250, 0, 0);
+        
+        KeyboardInputClass input = new KeyboardInputClass();
+        String batch = input.getKeyboardInput("Go again? (Y/N)");
+        if (batch.toLowerCase().equals("n")) {
+            System.exit(-1);
+        } else {
+            myImage.closeDisplay();
         }
     }
 }
