@@ -7,7 +7,15 @@ import java.util.Comparator;
 import java.util.Random;
 
 public class GeneticAlgoirthm {
-
+    
+    //GO FOR THE MAX VALUE, BUT IF IT REACHES THE TARGET VALUE STOP!  TARGET VALUE IS A STOPPING POINT, NOT THE DESTINATION,
+    //WE NEED TO MAX OUT THE VALUE, NOT JUST WAIT TIL IT GETS TO THE TARGET VALUE
+    //VIEW DETAILS: ALSO GIVES YOU THE STATS OF WHAT THE BEST FITNESS SELECTED BASED ON THE POPULATION
+    //GO WITH DEFAULTS YOU LIKE BEST, DEFAULTS ARE MEANINGLESS TO HIM
+    //BIN SIZE IS THE GAP BETWEEN HISTOGRAM BARS
+    //HISTOGRAM SHOULD SHOW THE COUNTS OF EACH GENERATION FOR MULTIPLE RUNS
+    //DETERMINE HOW TO DRAW THE HORIZONTAL GRID LINES
+    
     public static ArrayList<Item> shipmentData;
     public static int knapsackCapacity;
     public static int targetValue;
@@ -24,8 +32,9 @@ public class GeneticAlgoirthm {
     public static void main(String[] args) {
         KeyboardInputClass input = new KeyboardInputClass();
         boolean hasFinished = true;
+        
+        //displayImage(new int[]{500,500,1001,1001,1001,1001,2000,3000,3000,3000}, 1000);
         while (true) {
-            
             if(hasFinished){
                 hasFinished = false;
                 //get the users information for the GA
@@ -43,7 +52,7 @@ public class GeneticAlgoirthm {
             crossoverRate = .5;
             mutationRate = .1;
             numberOfGenerations = 1;
-            targetValue = 1000;
+            targetValue = maxValue;
             targetFitness = 1.0;
             numberOfRuns = 1;
             histogramBinSize = 1000;
@@ -80,6 +89,12 @@ public class GeneticAlgoirthm {
                             + currentGen.get(0).totalValue);
                     //if we reach the target fitness, stop iterating and show the details
                     if (currentGen.get(0).fitness >= targetFitness) {
+                        hasFinished = true;
+                        break;
+                    }
+                    
+                    //we've reached the best combination
+                    if(currentGen.get(0).totalValue >= targetValue && currentGen.get(0).totalWeight <= knapsackCapacity){
                         hasFinished = true;
                         break;
                     }
@@ -161,13 +176,20 @@ public class GeneticAlgoirthm {
                     //subject to change depending on what Dr. Donaldson wants
                     int index = 0;
                     while (currentGen.get(0).fitness < targetFitness) {
+                        if(currentGen.get(0).totalValue >= targetValue && currentGen.get(0).totalWeight <= knapsackCapacity){
+                            //we've reached the end
+                            break;
+                        }
                         index++;
                         currentGen = iterateGenerations(index, currentGen);
 
                         //safeguard against endless loop
-                        if (index == 1000000) {
+                        if (index == 100000) {
+                            System.out.println("Reached End of maximum generation count.");
                             break;
                         }
+                        
+                        
                         //System.out.println(currentGen.get(0).fitness);
                     }
 
@@ -197,6 +219,8 @@ public class GeneticAlgoirthm {
                 for (int i = 0; i < generationCount.length; i++) {
                     System.out.println(generationCount[i]);
                 }
+                
+                displayImage(generationCount,histogramBinSize);
                 hasFinished = true;
             }
         }
@@ -232,7 +256,7 @@ public class GeneticAlgoirthm {
         } catch (Exception e) {
         }
         try {
-            targetValue = Integer.parseInt(input.getKeyboardInput("Target value? (default = 1000)"));
+            targetValue = Integer.parseInt(input.getKeyboardInput("Target value? (default = "+ targetValue +")"));
         } catch (Exception e) {
         }
         try {
@@ -242,20 +266,11 @@ public class GeneticAlgoirthm {
     }
 
     public static ArrayList<PopulationMember> iterateGenerations(int generationNumber, ArrayList<PopulationMember> currentGen) {
-        //if save the best solution is true, set the last member to the best member
-        //if(isSavedBestSolution){
-        //currentGen.set(currentGen.size() - 1, bestMember);
-        //}
-
         //generate the next population
         Random rand = new Random();
         ArrayList<PopulationMember> newGen = new ArrayList<PopulationMember>();
         int startingPoint = 0;
-        if (isSavedBestSolution) {
-            startingPoint++;
-            //save the best solution to the next generation
-            newGen.add(currentGen.get(0));
-        }
+
         for (int j = startingPoint; j < currentGen.size(); j++) {
 
             //System.out.println(dad.fitness + ", " + mom.fitness);
@@ -264,7 +279,12 @@ public class GeneticAlgoirthm {
             if (rand.nextDouble() <= crossoverRate) {
                 //select two parents
                 PopulationMember dad = getBestParentOnWeightedPercentage(currentGen);
-                PopulationMember mom = getBestParentOnWeightedPercentage(currentGen);
+                
+                PopulationMember mom = dad;
+                //addresses duplicates
+                while(mom == dad){
+                    mom = getBestParentOnWeightedPercentage(currentGen);
+                }
                 crossedOverChromosome = crossover(dad, mom).sequence;
             } else {
                 //don't crossover, just add the dad 
@@ -289,6 +309,12 @@ public class GeneticAlgoirthm {
             }
         });
 
+        if (isSavedBestSolution) {
+            startingPoint++;
+            //save the best solution to the next generation
+            newGen.add(currentGen.get(0));
+        }
+        
         return newGen;
 
     }
@@ -401,9 +427,18 @@ public class GeneticAlgoirthm {
             String chromosome = "";
             //generate random chromsome
             double factor = (double) i / (double) populationSize;
+            double padding = .1;
+            if(factor == 0.0){
+                factor = factor + padding;
+            }
+            
+            if(factor + padding > 1){
+                factor = factor - padding;
+            }
             for (int j = 0; j < chromosomeLength; j++) {
                 //have alot of 1s and alot of 0s in other population
                 double random = rand.nextDouble();
+                
                 
                 if(random > factor){
                     chromosome += '1';
@@ -418,5 +453,35 @@ public class GeneticAlgoirthm {
             generation.add(cur);
         }
         return generation;
+    }
+
+    private static void displayImage(int[] generationCount, int binSize) {
+        ImageConstruction myImage = new ImageConstruction(500, 500, 0, 500, 0, 500, 1);
+        
+        myImage.displayImage(true, "GA Histogram", true);
+        myImage.insertLine(50, 50, 50, 450, 250, 0, 0);
+        myImage.insertLine(50, 50, 450, 50, 250, 0, 0);
+        for (int i = 0; i < 10; i++) {
+            myImage.insertLine(50 * i, 50, 50 * i, 55, 250, 0, 0);
+            myImage.insertLine(50, 50 * i, 55, 50 * i, 250, 0, 0);
+            
+        }
+        int[] counts = new int[25];
+        for(int i = 0; i < generationCount.length; i++){
+            int count = generationCount[i];
+            for (int j = 0; j < counts.length; j++) {
+                if(count >= (binSize * j) && count < (binSize * j) + binSize){
+                    counts[j]++;
+                    break;
+                }
+                
+            }
+        }
+        
+        double barWidth = 495.0 / 20.0;
+        for(int i = 0; i < counts.length; i++){
+            double barHeight = ((495 * counts[i]) / generationCount.length) + 50;
+            myImage.insertBox(((barWidth * i)+ barWidth) + barWidth, barWidth * 2, ((barWidth * i) + (barWidth * 2)) + barWidth, barHeight, 0, 250, 0, false);
+        }
     }
 }

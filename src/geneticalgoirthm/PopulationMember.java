@@ -2,7 +2,6 @@ package geneticalgoirthm;
 
 import static geneticalgoirthm.GeneticAlgoirthm.knapsackCapacity;
 import static geneticalgoirthm.GeneticAlgoirthm.shipmentData;
-import static geneticalgoirthm.GeneticAlgoirthm.targetValue;
 import static geneticalgoirthm.GeneticAlgoirthm.maxValue;
 
 public class PopulationMember {
@@ -44,10 +43,10 @@ public class PopulationMember {
             distanceFromMaxWeight = (double) this.totalWeight / (double) knapsackCapacity;
         }
         
-        if((double) this.totalValue / (double) targetValue > 1){
-            distanceFromMaxValue = (double) targetValue / (double) this.totalValue;
+        if((double) this.totalValue / (double) maxValue > 1){
+            distanceFromMaxValue = (double) maxValue / (double) this.totalValue;
         }else{
-            distanceFromMaxValue = (double) this.totalValue / (double) targetValue;
+            distanceFromMaxValue = (double) this.totalValue / (double) maxValue;
         }
         
         //penalty for having overweight because that cant be a legal solution
