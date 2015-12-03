@@ -7,7 +7,7 @@ package geneticalgoirthm;
 //***********************************************************************************************************
 public class Item {
     public int weight;
-    public int value;
+    public double value;
     
     public Item(){
         
